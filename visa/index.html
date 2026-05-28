@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enriquecimiento de Transferencias Internas — Jack Henry SilverLake</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0e12;
+    --surface: #13161c;
+    --surface-2: #1a1e27;
+    --surface-3: #222733;
+    --border: #2a3040;
+    --border-light: #353d50;
+    --text: #e2e6ef;
+    --text-dim: #8892a6;
+    --text-muted: #5c6478;
+    --accent: #4f8aff;
+    --accent-glow: #4f8aff30;
+    --green: #34d399;
+    --green-dim: #34d39920;
+    --amber: #fbbf24;
+    --amber-dim: #fbbf2420;
+    --red: #f87171;
+    --red-dim: #f8717120;
+    --purple: #a78bfa;
+    --purple-dim: #a78bfa20;
+    --teal: #2dd4bf;
+    --teal-dim: #2dd4bf20;
+    --code-bg: #0d1017;
+    --tag: #7dd3fc;
+    --attr: #c4b5fd;
+    --val: #86efac;
+    --comment: #4a5568;
+    --step-line: #2a3040;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ─── HEADER ─── */
+  .hero {
+    position: relative;
+    padding: 80px 40px 60px;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; left: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+  .hero-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 400;
+    line-height: 1.15;
+    color: #fff;
+    margin-bottom: 16px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero-sub {
+    font-size: 17px;
+    color: var(--text-dim);
+    max-width: 700px;
+  }
+
+  /* ─── ENV BAR ─── */
+  .env-bar {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 40px;
+  }
+  .env-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .env-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .env-key {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .env-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--green);
+    font-weight: 500;
+  }
+  .env-title {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  /* ─── MAIN ─── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+  }
+
+  /* ─── FLOW OVERVIEW ─── */
+  .flow-overview {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin: 40px 0 60px;
+    background: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .flow-card {
+    background: var(--surface);
+    padding: 24px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-card::after {
+    content: '→';
+    position: absolute;
+    right: -12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: var(--text-muted);
+    z-index: 2;
+  }
+  .flow-card:last-child::after { display: none; }
+  .flow-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  .flow-card:nth-child(1) .flow-num { background: var(--purple-dim); color: var(--purple); }
+  .flow-card:nth-child(2) .flow-num { background: var(--teal-dim); color: var(--teal); }
+  .flow-card:nth-child(3) .flow-num { background: var(--amber-dim); color: var(--amber); }
+  .flow-card:nth-child(4) .flow-num { background: var(--green-dim); color: var(--green); }
+  .flow-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .flow-desc {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .flow-op {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 8px;
+    background: var(--accent-glow);
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  /* ─── STEP SECTIONS ─── */
+  .step-section {
+    margin-bottom: 64px;
+    position: relative;
+  }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .step-num-big {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .step-1 .step-num-big { background: var(--purple-dim); color: var(--purple); border: 2px solid var(--purple); }
+  .step-2 .step-num-big { background: var(--teal-dim); color: var(--teal); border: 2px solid var(--teal); }
+  .step-3 .step-num-big { background: var(--amber-dim); color: var(--amber); border: 2px solid var(--amber); }
+  .step-4 .step-num-big { background: var(--green-dim); color: var(--green); border: 2px solid var(--green); }
+  .step-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: #fff;
+  }
+
+  /* ─── EXPLANATION CARD ─── */
+  .explanation {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .explanation h3 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+  .explanation p {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.8;
+  }
+  .explanation p + p { margin-top: 12px; }
+  .explanation strong { color: #fff; }
+  .explanation code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  /* ─── XML BLOCKS ─── */
+  .xml-block {
+    margin-bottom: 20px;
+  }
+  .http-headers {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.9;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 16px;
+  }
+  .http-headers .hk {
+    color: var(--text-muted);
+    text-align: right;
+    white-space: nowrap;
+  }
+  .http-headers .hv {
+    color: var(--green);
+    word-break: break-all;
+  }
+  .http-headers .hv.method {
+    color: var(--amber);
+    font-weight: 600;
+  }
+  .http-headers .hv.action {
+    color: var(--accent);
+  }
+  .http-header-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .xml-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .xml-label-tag {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .xml-label-tag.req { background: var(--accent-glow); color: var(--accent); }
+  .xml-label-tag.res { background: var(--green-dim); color: var(--green); }
+  .xml-label span {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .xml-pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.8;
+    color: var(--text-dim);
+    tab-size: 2;
+  }
+  .xml-pre .t { color: var(--tag); }       /* tags */
+  .xml-pre .a { color: var(--attr); }      /* attributes */
+  .xml-pre .v { color: var(--val); }       /* values */
+  .xml-pre .c { color: var(--comment); font-style: italic; }  /* comments */
+  .xml-pre .h { color: var(--amber); }     /* highlight */
+  .xml-pre .var { color: var(--purple); }   /* variables */
+
+  /* ─── NOTES ─── */
+  .note-box {
+    background: var(--surface-2);
+    border-left: 3px solid var(--amber);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .note-box.info { border-left-color: var(--accent); }
+  .note-box.success { border-left-color: var(--green); }
+  .note-box.danger { border-left-color: var(--red); }
+  .note-box strong { color: var(--text); }
+  .note-box code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  /* ─── FIELD TABLE ─── */
+  .field-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  .field-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .field-table td:first-child {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+  }
+  .field-table tr:last-child td { border-bottom: none; }
+  .field-table .hl { color: var(--amber); font-weight: 600; }
+
+  /* ─── DIVIDER ─── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 48px 0;
+  }
+
+  /* ─── FOOTER ─── */
+  .doc-footer {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+  }
+  .doc-footer strong { color: var(--text-dim); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 800px) {
+    .hero, .env-bar, .container { padding-left: 20px; padding-right: 20px; }
+    .flow-overview { grid-template-columns: 1fr 1fr; }
+    .flow-card:nth-child(2)::after { display: none; }
+    .step-title { font-size: 22px; }
+    .env-grid { grid-template-columns: 1fr 1fr; }
+    .xml-pre { font-size: 11px; padding: 16px; }
+  }
+  @media (max-width: 500px) {
+    .flow-overview { grid-template-columns: 1fr; }
+    .flow-card::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ████ HERO ████ -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge"><span class="dot"></span> Equipo Solución de Caja — Internal Transfer Enrichment</div>
+    <h1>Enriquecimiento de <span>Transferencias Internas</span> con Nombres de Titulares</h1>
+    <p class="hero-sub">Flujo completo de 4 pasos para obtener y persistir los nombres del emisor y receptor en transferencias same-bank vía jXchange SOAP — SilverLake.</p>
+  </div>
+</div>
+
+<!-- ████ ENV BAR ████ -->
+<div class="env-bar">
+  <div class="env-grid">
+    <div class="env-title">Datos fijos — Sandbox DMZ Veritran</div>
+    <div class="env-item">
+      <span class="env-key">ConsumerName</span>
+      <span class="env-val">Veritran</span>
+    </div>
+    <div class="env-item">
+      <span class="env-key">ConsumerProd</span>
+      <span class="env-val">DigitalBankingSolutions</span>
+    </div>
+    <div class="env-item">
+      <span class="env-key">ValidConsmName</span>
+      <span class="env-val">Veritran</span>
+    </div>
+    <div class="env-item">
+      <span class="env-key">ValidConsmProd</span>
+      <span class="env-val">DigitalBankingSolutions</span>
+    </div>
+    <div class="env-item">
+      <span class="env-key">AuditUsrId</span>
+      <span class="env-val">Veritran</span>
+    </div>
+    <div class="env-item">
+      <span class="env-key">AuditWsId</span>
+      <span class="env-val">DigitalBankingSolutions</span>
+    </div>
+    <div class="env-item">
+      <span class="env-key">InstRtId</span>
+      <span class="env-val">999800100</span>
+    </div>
+    <div class="env-item">
+      <span class="env-key">InstEnv</span>
+      <span class="env-val">TEST</span>
+    </div>
+  </div>
+</div>
+
+<!-- ████ MAIN CONTENT ████ -->
+<div class="container">
+
+  <!-- ─── FLOW OVERVIEW ─── -->
+  <div class="flow-overview">
+    <div class="flow-card">
+      <div class="flow-num">1</div>
+      <div class="flow-label">Nombre del Emisor</div>
+      <div class="flow-desc">Titular de la cuenta origen</div>
+      <div class="flow-op">AcctInq</div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">2</div>
+      <div class="flow-label">Nombre del Receptor</div>
+      <div class="flow-desc">Titular de la cuenta destino</div>
+      <div class="flow-op">AcctInq</div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">3</div>
+      <div class="flow-label">Transferencia</div>
+      <div class="flow-desc">Ejecutar con nombres en EftDesc</div>
+      <div class="flow-op">XferAdd</div>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">4</div>
+      <div class="flow-label">Historial</div>
+      <div class="flow-desc">Recuperar nombres del movimiento</div>
+      <div class="flow-op">AcctHistSrch</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              PASO 1: AcctInq FROM          -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-section step-1">
+    <div class="step-header">
+      <div class="step-num-big">1</div>
+      <div class="step-title">Obtener nombre del Emisor</div>
+    </div>
+
+    <div class="explanation">
+      <h3>Explicación Funcional</h3>
+      <p>Antes de ejecutar la transferencia, necesitamos saber <strong>quién es el titular de la cuenta origen</strong> (el que manda la plata). Usamos <code>AcctInq</code> con el <code>XtendElem</code> <strong><code>x_DepInfoRec</code></strong> porque nos devuelve el nombre completo del titular en el campo <code>PersonName.ComName</code> del response.</p>
+      <p>Podríamos usar <code>CustInq</code> también, pero eso requiere el <code>CustId</code>. Con <code>AcctInq</code> solo necesitamos el número de cuenta y tipo, que ya tenemos en el request de transferencia (<code>FromAcctId</code> / <code>FromAcctType</code>).</p>
+      <p>Del response nos interesa extraer <strong><code>PersonName.ComName</code></strong> — es el nombre del titular tal como está registrado en SilverLake. Lo guardamos en una variable <code>senderFullName</code> para usarlo en el Paso 3.</p>
+    </div>
+
+    <div class="note-box info">
+      <strong>Importante:</strong> El complex element de la cuenta es <code>InAcctId</code> (no <code>AccountId</code>). Además, hay que usar el namespace con prefijo <code>ns:</code> y agregar <code>IncXtendElemArray</code> con el valor <code>x_DepInfoRec</code> para que SilverLake devuelva los datos del titular. Sin el <code>XtendElem</code>, el response viene vacío. Incluir también los <code>Ver_1/Ver_2/Ver_3</code> después de cerrar <code>jXchangeHdr</code> dentro de <code>MsgRqHdr</code>.
+    </div>
+
+    <!-- REQUEST -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag req">Request</span>
+        <span>AcctInq — Cuenta Origen</span>
+      </div>
+      <div class="http-header-label">HTTP Headers</div>
+      <div class="http-headers">
+        <span class="hk">Method</span><span class="hv method">POST</span>
+        <span class="hk">Content-Type</span><span class="hv">text/xml; charset=utf-8</span>
+        <span class="hk">SOAPAction</span><span class="hv action">"http://jackhenry.com/ws/AcctInq"</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="t">&lt;soapenv:Envelope</span>
+    <span class="a">xmlns:soapenv</span>=<span class="v">"http://schemas.xmlsoap.org/soap/envelope/"</span>
+    <span class="a">xmlns:ns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+  <span class="t">&lt;soapenv:Header/&gt;</span>
+  <span class="t">&lt;soapenv:Body&gt;</span>
+    <span class="t">&lt;ns:AcctInq&gt;</span>
+      <span class="t">&lt;ns:MsgRqHdr&gt;</span>
+        <span class="t">&lt;ns:jXchangeHdr&gt;</span>
+          <span class="t">&lt;ns:JxVer/&gt;</span>
+          <span class="t">&lt;ns:AuditUsrId&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ns:AuditUsrId&gt;</span>
+          <span class="t">&lt;ns:AuditWsId&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ns:AuditWsId&gt;</span>
+          <span class="t">&lt;ns:AuthenUsrId/&gt;</span>
+          <span class="t">&lt;ns:ConsumerName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ns:ConsumerName&gt;</span>
+          <span class="t">&lt;ns:ConsumerProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ns:ConsumerProd&gt;</span>
+          <span class="t">&lt;ns:Ver_1/&gt;</span>
+          <span class="t">&lt;ns:jXLogTrackingId&gt;</span><span class="var">${trackingId}</span><span class="t">&lt;/ns:jXLogTrackingId&gt;</span>
+          <span class="t">&lt;ns:Ver_2/&gt;</span>
+          <span class="t">&lt;ns:InstRtId&gt;</span><span class="v">999800100</span><span class="t">&lt;/ns:InstRtId&gt;</span>
+          <span class="t">&lt;ns:InstEnv&gt;</span><span class="v">TEST</span><span class="t">&lt;/ns:InstEnv&gt;</span>
+          <span class="t">&lt;ns:Ver_3/&gt;</span>
+          <span class="t">&lt;ns:Ver_4/&gt;</span>
+          <span class="t">&lt;ns:WorkflowCorrelId/&gt;</span>
+          <span class="t">&lt;ns:Ver_5/&gt;</span>
+          <span class="t">&lt;ns:ValidConsmName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ns:ValidConsmName&gt;</span>
+          <span class="t">&lt;ns:ValidConsmProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ns:ValidConsmProd&gt;</span>
+          <span class="t">&lt;ns:Ver_6/&gt;</span>
+        <span class="t">&lt;/ns:jXchangeHdr&gt;</span>
+        <span class="t">&lt;ns:Ver_1/&gt;</span>
+        <span class="t">&lt;ns:Ver_2/&gt;</span>
+        <span class="t">&lt;ns:Ver_3/&gt;</span>
+      <span class="t">&lt;/ns:MsgRqHdr&gt;</span>
+      <span class="t">&lt;ns:InAcctId&gt;</span>                                          <span class="c">&lt;!-- ★ InAcctId, NO AccountId --&gt;</span>
+        <span class="t">&lt;ns:AcctId&gt;</span><span class="h">${fromAccountNumber}</span><span class="t">&lt;/ns:AcctId&gt;</span>       <span class="c">&lt;!-- Cuenta ORIGEN --&gt;</span>
+        <span class="t">&lt;ns:AcctType&gt;</span><span class="h">${fromAccountType}</span><span class="t">&lt;/ns:AcctType&gt;</span>   <span class="c">&lt;!-- D=Checking, S=Savings --&gt;</span>
+        <span class="t">&lt;ns:Ver_1/&gt;</span>
+      <span class="t">&lt;/ns:InAcctId&gt;</span>
+      <span class="t">&lt;ns:IncXtendElemArray&gt;</span>                                  <span class="c">&lt;!-- ★ Requerido para que devuelva datos --&gt;</span>
+        <span class="t">&lt;ns:IncXtendElemInfo&gt;</span>
+          <span class="t">&lt;ns:XtendElem&gt;</span><span class="h">x_DepInfoRec</span><span class="t">&lt;/ns:XtendElem&gt;</span>       <span class="c">&lt;!-- Trae PersonName.ComName, CustId, balances --&gt;</span>
+          <span class="t">&lt;ns:Ver_1/&gt;</span>
+        <span class="t">&lt;/ns:IncXtendElemInfo&gt;</span>
+      <span class="t">&lt;/ns:IncXtendElemArray&gt;</span>
+    <span class="t">&lt;/ns:AcctInq&gt;</span>
+  <span class="t">&lt;/soapenv:Body&gt;</span>
+<span class="t">&lt;/soapenv:Envelope&gt;</span></pre>
+    </div>
+
+    <!-- RESPONSE -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag res">Response</span>
+        <span>Campos relevantes del response (verificado en sandbox)</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;AcctInqResponse</span> <span class="a">xmlns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+  <span class="t">&lt;MsgRsHdr&gt;</span>
+    <span class="c">&lt;!-- ... jXchangeHdr echo ... --&gt;</span>
+  <span class="t">&lt;/MsgRsHdr&gt;</span>
+  <span class="t">&lt;DepAcctInqRec&gt;</span>
+    <span class="t">&lt;x_DepInfoRec&gt;</span>
+      <span class="t">&lt;DepInfoRec&gt;</span>
+        <span class="t">&lt;AcctStat&gt;</span><span class="v">1</span><span class="t">&lt;/AcctStat&gt;</span>                            <span class="c">&lt;!-- 1 = Active --&gt;</span>
+        <span class="t">&lt;CustId&gt;</span><span class="h">LGA6277</span><span class="t">&lt;/CustId&gt;</span>                          <span class="c">&lt;!-- Customer ID --&gt;</span>
+        <span class="c">&lt;!-- ... más campos ... --&gt;</span>
+      <span class="t">&lt;/DepInfoRec&gt;</span>
+      <span class="t">&lt;DepAcctId&gt;</span>
+        <span class="t">&lt;AcctId&gt;</span><span class="v">120618</span><span class="t">&lt;/AcctId&gt;</span>
+        <span class="t">&lt;AcctType&gt;</span><span class="v">D</span><span class="t">&lt;/AcctType&gt;</span>
+      <span class="t">&lt;/DepAcctId&gt;</span>
+      <span class="t">&lt;PersonName&gt;</span>
+        <span class="t">&lt;ComName&gt;</span><span class="h">Camilo L</span><span class="t">&lt;/ComName&gt;</span>                     <span class="c">&lt;!-- ★★★ NOMBRE DEL TITULAR ★★★ --&gt;</span>
+      <span class="t">&lt;/PersonName&gt;</span>
+      <span class="t">&lt;AvlBal&gt;</span><span class="v">1050.41</span><span class="t">&lt;/AvlBal&gt;</span>
+      <span class="t">&lt;CurBal&gt;</span><span class="v">1048.41</span><span class="t">&lt;/CurBal&gt;</span>
+      <span class="t">&lt;AcctStatDesc&gt;</span><span class="v">Active</span><span class="t">&lt;/AcctStatDesc&gt;</span>
+    <span class="t">&lt;/x_DepInfoRec&gt;</span>
+  <span class="t">&lt;/DepAcctInqRec&gt;</span>
+<span class="t">&lt;/AcctInqResponse&gt;</span></pre>
+    </div>
+
+    <table class="field-table">
+      <tr><th>Campo del Response (XPath)</th><th>Descripción</th><th>Uso</th></tr>
+      <tr><td>DepAcctInqRec.x_DepInfoRec.PersonName.ComName</td><td>Nombre del titular como figura en el core</td><td class="hl">→ senderFullName</td></tr>
+      <tr><td>DepAcctInqRec.x_DepInfoRec.DepInfoRec.CustId</td><td>Customer ID del titular</td><td>Referencia adicional</td></tr>
+    </table>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              PASO 2: AcctInq TO            -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-section step-2">
+    <div class="step-header">
+      <div class="step-num-big">2</div>
+      <div class="step-title">Obtener nombre del Receptor</div>
+    </div>
+
+    <div class="explanation">
+      <h3>Explicación Funcional</h3>
+      <p>Mismo servicio que el Paso 1, pero ahora consultamos <strong>la cuenta destino</strong> (<code>ToAcctId</code> / <code>ToAcctType</code>). Como es una transferencia interna (same bank), la cuenta destino también existe en SilverLake y podemos consultar directamente.</p>
+      <p>Guardamos el resultado en <code>receiverFullName</code>. Los pasos 1 y 2 se pueden ejecutar <strong>en paralelo</strong> para optimizar tiempos.</p>
+    </div>
+
+    <!-- REQUEST -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag req">Request</span>
+        <span>AcctInq — Cuenta Destino</span>
+      </div>
+      <div class="http-header-label">HTTP Headers</div>
+      <div class="http-headers">
+        <span class="hk">Method</span><span class="hv method">POST</span>
+        <span class="hk">Content-Type</span><span class="hv">text/xml; charset=utf-8</span>
+        <span class="hk">SOAPAction</span><span class="hv action">"http://jackhenry.com/ws/AcctInq"</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="t">&lt;soapenv:Envelope</span>
+    <span class="a">xmlns:soapenv</span>=<span class="v">"http://schemas.xmlsoap.org/soap/envelope/"</span>
+    <span class="a">xmlns:ns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+  <span class="t">&lt;soapenv:Header/&gt;</span>
+  <span class="t">&lt;soapenv:Body&gt;</span>
+    <span class="t">&lt;ns:AcctInq&gt;</span>
+      <span class="t">&lt;ns:MsgRqHdr&gt;</span>
+        <span class="t">&lt;ns:jXchangeHdr&gt;</span>
+          <span class="t">&lt;ns:JxVer/&gt;</span>
+          <span class="t">&lt;ns:AuditUsrId&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ns:AuditUsrId&gt;</span>
+          <span class="t">&lt;ns:AuditWsId&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ns:AuditWsId&gt;</span>
+          <span class="t">&lt;ns:AuthenUsrId/&gt;</span>
+          <span class="t">&lt;ns:ConsumerName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ns:ConsumerName&gt;</span>
+          <span class="t">&lt;ns:ConsumerProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ns:ConsumerProd&gt;</span>
+          <span class="t">&lt;ns:Ver_1/&gt;</span>
+          <span class="t">&lt;ns:jXLogTrackingId&gt;</span><span class="var">${trackingId}</span><span class="t">&lt;/ns:jXLogTrackingId&gt;</span>
+          <span class="t">&lt;ns:Ver_2/&gt;</span>
+          <span class="t">&lt;ns:InstRtId&gt;</span><span class="v">999800100</span><span class="t">&lt;/ns:InstRtId&gt;</span>
+          <span class="t">&lt;ns:InstEnv&gt;</span><span class="v">TEST</span><span class="t">&lt;/ns:InstEnv&gt;</span>
+          <span class="t">&lt;ns:Ver_3/&gt;</span>
+          <span class="t">&lt;ns:Ver_4/&gt;</span>
+          <span class="t">&lt;ns:WorkflowCorrelId/&gt;</span>
+          <span class="t">&lt;ns:Ver_5/&gt;</span>
+          <span class="t">&lt;ns:ValidConsmName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ns:ValidConsmName&gt;</span>
+          <span class="t">&lt;ns:ValidConsmProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ns:ValidConsmProd&gt;</span>
+          <span class="t">&lt;ns:Ver_6/&gt;</span>
+        <span class="t">&lt;/ns:jXchangeHdr&gt;</span>
+        <span class="t">&lt;ns:Ver_1/&gt;</span>
+        <span class="t">&lt;ns:Ver_2/&gt;</span>
+        <span class="t">&lt;ns:Ver_3/&gt;</span>
+      <span class="t">&lt;/ns:MsgRqHdr&gt;</span>
+      <span class="t">&lt;ns:InAcctId&gt;</span>                                          <span class="c">&lt;!-- ★ InAcctId, NO AccountId --&gt;</span>
+        <span class="t">&lt;ns:AcctId&gt;</span><span class="h">${toAccountNumber}</span><span class="t">&lt;/ns:AcctId&gt;</span>         <span class="c">&lt;!-- Cuenta DESTINO --&gt;</span>
+        <span class="t">&lt;ns:AcctType&gt;</span><span class="h">${toAccountType}</span><span class="t">&lt;/ns:AcctType&gt;</span>     <span class="c">&lt;!-- D=Checking, S=Savings --&gt;</span>
+        <span class="t">&lt;ns:Ver_1/&gt;</span>
+      <span class="t">&lt;/ns:InAcctId&gt;</span>
+      <span class="t">&lt;ns:IncXtendElemArray&gt;</span>
+        <span class="t">&lt;ns:IncXtendElemInfo&gt;</span>
+          <span class="t">&lt;ns:XtendElem&gt;</span><span class="h">x_DepInfoRec</span><span class="t">&lt;/ns:XtendElem&gt;</span>
+          <span class="t">&lt;ns:Ver_1/&gt;</span>
+        <span class="t">&lt;/ns:IncXtendElemInfo&gt;</span>
+      <span class="t">&lt;/ns:IncXtendElemArray&gt;</span>
+    <span class="t">&lt;/ns:AcctInq&gt;</span>
+  <span class="t">&lt;/soapenv:Body&gt;</span>
+<span class="t">&lt;/soapenv:Envelope&gt;</span></pre>
+    </div>
+
+    <!-- RESPONSE -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag res">Response</span>
+        <span>Campos relevantes del response (verificado en sandbox)</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;AcctInqResponse</span> <span class="a">xmlns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+  <span class="t">&lt;MsgRsHdr&gt;</span>
+    <span class="c">&lt;!-- ... jXchangeHdr echo ... --&gt;</span>
+  <span class="t">&lt;/MsgRsHdr&gt;</span>
+  <span class="t">&lt;DepAcctInqRec&gt;</span>
+    <span class="t">&lt;x_DepInfoRec&gt;</span>
+      <span class="t">&lt;DepInfoRec&gt;</span>
+        <span class="t">&lt;CustId&gt;</span><span class="v">XYZ9999</span><span class="t">&lt;/CustId&gt;</span>
+      <span class="t">&lt;/DepInfoRec&gt;</span>
+      <span class="t">&lt;PersonName&gt;</span>
+        <span class="t">&lt;ComName&gt;</span><span class="h">Maria Garcia</span><span class="t">&lt;/ComName&gt;</span>                 <span class="c">&lt;!-- ★ NOMBRE DEL RECEPTOR --&gt;</span>
+      <span class="t">&lt;/PersonName&gt;</span>
+    <span class="t">&lt;/x_DepInfoRec&gt;</span>
+  <span class="t">&lt;/DepAcctInqRec&gt;</span>
+<span class="t">&lt;/AcctInqResponse&gt;</span></pre>
+    </div>
+
+    <table class="field-table">
+      <tr><th>Campo del Response (XPath)</th><th>Descripción</th><th>Uso</th></tr>
+      <tr><td>DepAcctInqRec.x_DepInfoRec.PersonName.ComName</td><td>Nombre del titular destino</td><td class="hl">→ receiverFullName</td></tr>
+    </table>
+
+    <div class="note-box success">
+      <strong>Optimización:</strong> Los pasos 1 y 2 son independientes entre sí. Ejecutalos en paralelo para reducir la latencia total del flujo. Solo necesitás que ambos hayan respondido antes de armar el XferAdd del Paso 3.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              PASO 3: XferAdd               -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-section step-3">
+    <div class="step-header">
+      <div class="step-num-big">3</div>
+      <div class="step-title">Ejecutar la Transferencia</div>
+    </div>
+
+    <div class="explanation">
+      <h3>Explicación Funcional</h3>
+      <p>Acá es donde se ejecuta la transferencia interna y <strong>se persisten los nombres</strong> en el core de SilverLake usando dos arrays independientes: <code>DrEftDescArray</code> (lo que queda en la cuenta origen) y <code>EftDescArray</code> (lo que queda en la cuenta destino).</p>
+      <p>La lógica clave: <strong>cada usuario ve el nombre del otro</strong>. El que manda plata ve "TO: nombre del receptor". El que recibe plata ve "FROM: nombre del emisor". Por eso usamos arrays separados con contenido distinto.</p>
+      <p>En SilverLake, cada array mapea posicionalmente a campos internos (DREFHDS1-4 para débito, EFHDS1-4 para crédito). Cada campo tiene un <strong>máximo de 30 caracteres</strong>. Lo que mandemos acá es exactamente lo que vamos a recuperar en el <code>AcctHistSrch</code>.</p>
+    </div>
+
+    <table class="field-table">
+      <tr><th>Array</th><th>Posición</th><th>Mapeo SilverLake</th><th>Contenido</th><th>Max</th></tr>
+      <tr><td>DrEftDesc[0]</td><td>DREFHDS1</td><td>Lo ve el ORIGEN</td><td class="hl">TO:${receiverFullName}</td><td>30</td></tr>
+      <tr><td>DrEftDesc[1]</td><td>DREFHDS2</td><td>Lo ve el ORIGEN</td><td>|${toAcct}|${BETWEEN_CODE}</td><td>30</td></tr>
+      <tr><td>DrEftDesc[2]</td><td>DREFHDS3</td><td>Lo ve el ORIGEN</td><td>${custId}|${fromAcct}</td><td>30</td></tr>
+      <tr><td>EftDesc[0]</td><td>EFHDS1</td><td>Lo ve el DESTINO</td><td class="hl">FROM:${senderFullName}</td><td>30</td></tr>
+      <tr><td>EftDesc[1]</td><td>EFHDS2</td><td>Lo ve el DESTINO</td><td>|${toAcct}|${BETWEEN_CODE}</td><td>30</td></tr>
+      <tr><td>EftDesc[2]</td><td>EFHDS3</td><td>Lo ve el DESTINO</td><td>${custId}|${fromAcct}</td><td>30</td></tr>
+    </table>
+
+    <div class="note-box danger">
+      <strong>Límite de 30 caracteres:</strong> Si el nombre completo supera 25 caracteres (contando el prefijo "FROM:" o "TO:"), hay que truncarlo. Ejemplo: "JOHN MICHAEL ROBERTSON JR" (25 chars) → con prefijo "FROM:" serían 30, justo en el límite. Implementen un truncado seguro en la app.
+    </div>
+
+    <!-- REQUEST -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag req">Request</span>
+        <span>XferAdd — Con nombres embebidos en DrEftDescArray y EftDescArray</span>
+      </div>
+      <div class="http-header-label">HTTP Headers</div>
+      <div class="http-headers">
+        <span class="hk">Method</span><span class="hv method">POST</span>
+        <span class="hk">Content-Type</span><span class="hv">text/xml; charset=utf-8</span>
+        <span class="hk">SOAPAction</span><span class="hv action">"http://jackhenry.com/ws/XferAdd"</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="t">&lt;SOAP-ENV:Envelope</span>
+    <span class="a">xmlns:SOAP-ENV</span>=<span class="v">"http://schemas.xmlsoap.org/soap/envelope/"</span>
+    <span class="a">xmlns:xsd</span>=<span class="v">"http://www.w3.org/2001/XMLSchema"</span>
+    <span class="a">xmlns:xsi</span>=<span class="v">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="t">&gt;</span>
+  <span class="t">&lt;SOAP-ENV:Header/&gt;</span>
+  <span class="t">&lt;SOAP-ENV:Body&gt;</span>
+    <span class="t">&lt;XferAdd</span> <span class="a">xmlns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+      <span class="t">&lt;MsgRqHdr&gt;</span>
+        <span class="t">&lt;jXchangeHdr&gt;</span>
+          <span class="t">&lt;JxVer/&gt;</span>
+          <span class="t">&lt;AuditUsrId&gt;</span><span class="v">Veritran</span><span class="t">&lt;/AuditUsrId&gt;</span>
+          <span class="t">&lt;AuditWsId&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/AuditWsId&gt;</span>
+          <span class="t">&lt;AuthenUsrId/&gt;</span>
+          <span class="t">&lt;ConsumerName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ConsumerName&gt;</span>
+          <span class="t">&lt;ConsumerProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ConsumerProd&gt;</span>
+          <span class="t">&lt;Ver_1/&gt;</span>
+          <span class="t">&lt;jXLogTrackingId&gt;</span><span class="var">${coreId}</span><span class="t">&lt;/jXLogTrackingId&gt;</span>
+          <span class="t">&lt;Ver_2/&gt;</span>
+          <span class="t">&lt;InstRtId&gt;</span><span class="v">999800100</span><span class="t">&lt;/InstRtId&gt;</span>
+          <span class="t">&lt;InstEnv&gt;</span><span class="v">TEST</span><span class="t">&lt;/InstEnv&gt;</span>
+          <span class="t">&lt;Ver_3/&gt;</span>
+          <span class="t">&lt;Ver_4/&gt;</span>
+          <span class="t">&lt;WorkflowCorrelId/&gt;</span>
+          <span class="t">&lt;Ver_5/&gt;</span>
+          <span class="t">&lt;ValidConsmName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ValidConsmName&gt;</span>
+          <span class="t">&lt;ValidConsmProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ValidConsmProd&gt;</span>
+          <span class="t">&lt;Ver_6/&gt;</span>
+        <span class="t">&lt;/jXchangeHdr&gt;</span>
+      <span class="t">&lt;/MsgRqHdr&gt;</span>
+      <span class="t">&lt;XferType&gt;</span><span class="v">Xfer</span><span class="t">&lt;/XferType&gt;</span>                          <span class="c">&lt;!-- Intra-FI transfer --&gt;</span>
+      <span class="t">&lt;AcctIdFrom&gt;</span>
+        <span class="t">&lt;FromAcctId&gt;</span><span class="var">${fromAccountNumber}</span><span class="t">&lt;/FromAcctId&gt;</span>
+        <span class="t">&lt;FromAcctType&gt;</span><span class="var">${fromAccountType}</span><span class="t">&lt;/FromAcctType&gt;</span>
+      <span class="t">&lt;/AcctIdFrom&gt;</span>
+      <span class="t">&lt;AcctIdTo&gt;</span>
+        <span class="t">&lt;ToAcctId&gt;</span><span class="var">${toAccountNumber}</span><span class="t">&lt;/ToAcctId&gt;</span>
+        <span class="t">&lt;ToAcctType&gt;</span><span class="var">${toAccountType}</span><span class="t">&lt;/ToAcctType&gt;</span>
+      <span class="t">&lt;/AcctIdTo&gt;</span>
+      <span class="t">&lt;XferRec&gt;</span>
+        <span class="t">&lt;Amt&gt;</span><span class="var">${amount}</span><span class="t">&lt;/Amt&gt;</span>
+        <span class="c">&lt;!-- ★★★ LADO DÉBITO — lo que ve el que MANDA (cuenta origen) ★★★ --&gt;</span>
+        <span class="t">&lt;DrEftDescArray&gt;</span>
+          <span class="t">&lt;DrEftDescInfo&gt;</span>
+            <span class="t">&lt;DrEftDesc&gt;</span><span class="h">TO:<span class="var">${receiverFullName}</span></span><span class="t">&lt;/DrEftDesc&gt;</span>      <span class="c">&lt;!-- DREFHDS1: "Le mandaste a..." (max 30) --&gt;</span>
+          <span class="t">&lt;/DrEftDescInfo&gt;</span>
+          <span class="t">&lt;DrEftDescInfo&gt;</span>
+            <span class="t">&lt;DrEftDesc&gt;</span>|<span class="var">${toAccountNumber}</span>|<span class="var">${BETWEEN_TRANSFER_CODE}</span><span class="t">&lt;/DrEftDesc&gt;</span>  <span class="c">&lt;!-- DREFHDS2: Metadata --&gt;</span>
+          <span class="t">&lt;/DrEftDescInfo&gt;</span>
+          <span class="t">&lt;DrEftDescInfo&gt;</span>
+            <span class="t">&lt;DrEftDesc&gt;</span><span class="var">${custId}</span>|<span class="var">${fromAccountNumber}</span><span class="t">&lt;/DrEftDesc&gt;</span>     <span class="c">&lt;!-- DREFHDS3: Referencia --&gt;</span>
+          <span class="t">&lt;/DrEftDescInfo&gt;</span>
+        <span class="t">&lt;/DrEftDescArray&gt;</span>
+        <span class="t">&lt;DrTrnCodeCode&gt;</span><span class="var">${DebitTrancode}</span><span class="t">&lt;/DrTrnCodeCode&gt;</span>
+
+        <span class="c">&lt;!-- ★★★ LADO CRÉDITO — lo que ve el que RECIBE (cuenta destino) ★★★ --&gt;</span>
+        <span class="t">&lt;EftDescArray&gt;</span>
+          <span class="t">&lt;EftDescInfo&gt;</span>
+            <span class="t">&lt;EftDesc&gt;</span><span class="h">FROM:<span class="var">${senderFullName}</span></span><span class="t">&lt;/EftDesc&gt;</span>      <span class="c">&lt;!-- EFHDS1: "Te mandó plata..." (max 30) --&gt;</span>
+          <span class="t">&lt;/EftDescInfo&gt;</span>
+          <span class="t">&lt;EftDescInfo&gt;</span>
+            <span class="t">&lt;EftDesc&gt;</span>|<span class="var">${toAccountNumber}</span>|<span class="var">${BETWEEN_TRANSFER_CODE}</span><span class="t">&lt;/EftDesc&gt;</span>  <span class="c">&lt;!-- EFHDS2: Metadata --&gt;</span>
+          <span class="t">&lt;/EftDescInfo&gt;</span>
+          <span class="t">&lt;EftDescInfo&gt;</span>
+            <span class="t">&lt;EftDesc&gt;</span><span class="var">${custId}</span>|<span class="var">${fromAccountNumber}</span><span class="t">&lt;/EftDesc&gt;</span>     <span class="c">&lt;!-- EFHDS3: Referencia --&gt;</span>
+          <span class="t">&lt;/EftDescInfo&gt;</span>
+        <span class="t">&lt;/EftDescArray&gt;</span>
+
+        <span class="t">&lt;RedPrinc&gt;</span><span class="v">N</span><span class="t">&lt;/RedPrinc&gt;</span>
+        <span class="t">&lt;TrnCodeCode&gt;</span><span class="var">${CreditTrancode}</span><span class="t">&lt;/TrnCodeCode&gt;</span>
+        <span class="t">&lt;XferDesc&gt;</span><span class="var">${memo}</span><span class="t">&lt;/XferDesc&gt;</span>
+        <span class="t">&lt;XferSrcType&gt;</span><span class="v">Mob</span><span class="t">&lt;/XferSrcType&gt;</span>                   <span class="c">&lt;!-- Mobile --&gt;</span>
+      <span class="t">&lt;/XferRec&gt;</span>
+      <span class="t">&lt;Custom/&gt;</span>
+    <span class="t">&lt;/XferAdd&gt;</span>
+  <span class="t">&lt;/SOAP-ENV:Body&gt;</span>
+<span class="t">&lt;/SOAP-ENV:Envelope&gt;</span></pre>
+    </div>
+
+    <!-- RESPONSE -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag res">Response</span>
+        <span>XferAdd Response exitoso</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;XferAddResponse</span> <span class="a">xmlns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+  <span class="t">&lt;MsgRsHdr&gt;</span>
+    <span class="t">&lt;jXchangeHdr&gt;</span>
+      <span class="c">&lt;!-- ... echo del header ... --&gt;</span>
+    <span class="t">&lt;/jXchangeHdr&gt;</span>
+  <span class="t">&lt;/MsgRsHdr&gt;</span>
+  <span class="t">&lt;XferKey&gt;</span><span class="h">123456789</span><span class="t">&lt;/XferKey&gt;</span>                        <span class="c">&lt;!-- Identificador único de la transferencia --&gt;</span>
+  <span class="t">&lt;XferAddRec&gt;</span>
+    <span class="t">&lt;XferDt&gt;</span><span class="v">2026-05-27</span><span class="t">&lt;/XferDt&gt;</span>                       <span class="c">&lt;!-- Fecha de la transferencia --&gt;</span>
+    <span class="t">&lt;TrnRefId&gt;</span><span class="v">987654321</span><span class="t">&lt;/TrnRefId&gt;</span>                    <span class="c">&lt;!-- Referencia de transacción --&gt;</span>
+  <span class="t">&lt;/XferAddRec&gt;</span>
+<span class="t">&lt;/XferAddResponse&gt;</span></pre>
+    </div>
+
+    <div class="note-box">
+      <strong>Recordá:</strong> La transacción queda como memo-posted hasta el End of Day (EOD). Durante ese período se puede modificar con <code>TrnMod</code>. Después del EOD, queda hard-posted y aparece en el historial del <code>AcctHistSrch</code>.
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              PASO 4: AcctHistSrch          -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="step-section step-4">
+    <div class="step-header">
+      <div class="step-num-big">4</div>
+      <div class="step-title">Recuperar del Historial</div>
+    </div>
+
+    <div class="explanation">
+      <h3>Explicación Funcional</h3>
+      <p>Cuando el usuario consulta su historial de movimientos, usamos <code>AcctHistSrch</code> para traer las transacciones. Cada registro del historial incluye un <code>EftDescArray</code> que devuelve <strong>exactamente lo que mandamos en el Paso 3</strong>.</p>
+      <p>Nuestro sistema necesita parsear las líneas del <code>EftDescArray</code> buscando los prefijos <code>FROM:</code> y <code>TO:</code> para extraer los nombres. La lógica de parseo sería: si el <code>EftDesc</code> empieza con "FROM:" → nombre del emisor; si empieza con "TO:" → nombre del receptor.</p>
+      <p>Para transacciones memo-posted (mismo día, antes del EOD), usar <code>MemoPostInc=Only</code>. Para historial hard-posted (después del EOD), usar <code>MemoPostInc=Excl</code> (default).</p>
+    </div>
+
+    <!-- REQUEST -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag req">Request</span>
+        <span>AcctHistSrch — Historial de la cuenta</span>
+      </div>
+      <div class="http-header-label">HTTP Headers</div>
+      <div class="http-headers">
+        <span class="hk">Method</span><span class="hv method">POST</span>
+        <span class="hk">Content-Type</span><span class="hv">text/xml; charset=utf-8</span>
+        <span class="hk">SOAPAction</span><span class="hv action">"http://jackhenry.com/ws/AcctHistSrch"</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>
+<span class="t">&lt;SOAP-ENV:Envelope</span>
+    <span class="a">xmlns:SOAP-ENV</span>=<span class="v">"http://schemas.xmlsoap.org/soap/envelope/"</span>
+    <span class="a">xmlns:xsd</span>=<span class="v">"http://www.w3.org/2001/XMLSchema"</span>
+    <span class="a">xmlns:xsi</span>=<span class="v">"http://www.w3.org/2001/XMLSchema-instance"</span><span class="t">&gt;</span>
+  <span class="t">&lt;SOAP-ENV:Header/&gt;</span>
+  <span class="t">&lt;SOAP-ENV:Body&gt;</span>
+    <span class="t">&lt;AcctHistSrch</span> <span class="a">xmlns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+      <span class="t">&lt;SrchMsgRqHdr&gt;</span>
+        <span class="t">&lt;jXchangeHdr&gt;</span>
+          <span class="t">&lt;JxVer/&gt;</span>
+          <span class="t">&lt;AuditUsrId&gt;</span><span class="v">Veritran</span><span class="t">&lt;/AuditUsrId&gt;</span>
+          <span class="t">&lt;AuditWsId&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/AuditWsId&gt;</span>
+          <span class="t">&lt;AuthenUsrId/&gt;</span>
+          <span class="t">&lt;ConsumerName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ConsumerName&gt;</span>
+          <span class="t">&lt;ConsumerProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ConsumerProd&gt;</span>
+          <span class="t">&lt;Ver_1/&gt;</span>
+          <span class="t">&lt;jXLogTrackingId&gt;</span><span class="var">${trackingId}</span><span class="t">&lt;/jXLogTrackingId&gt;</span>
+          <span class="t">&lt;Ver_2/&gt;</span>
+          <span class="t">&lt;InstRtId&gt;</span><span class="v">999800100</span><span class="t">&lt;/InstRtId&gt;</span>
+          <span class="t">&lt;InstEnv&gt;</span><span class="v">TEST</span><span class="t">&lt;/InstEnv&gt;</span>
+          <span class="t">&lt;Ver_3/&gt;</span>
+          <span class="t">&lt;Ver_4/&gt;</span>
+          <span class="t">&lt;WorkflowCorrelId/&gt;</span>
+          <span class="t">&lt;Ver_5/&gt;</span>
+          <span class="t">&lt;ValidConsmName&gt;</span><span class="v">Veritran</span><span class="t">&lt;/ValidConsmName&gt;</span>
+          <span class="t">&lt;ValidConsmProd&gt;</span><span class="v">DigitalBankingSolutions</span><span class="t">&lt;/ValidConsmProd&gt;</span>
+          <span class="t">&lt;Ver_6/&gt;</span>
+        <span class="t">&lt;/jXchangeHdr&gt;</span>
+        <span class="t">&lt;MaxRec&gt;</span><span class="v">50</span><span class="t">&lt;/MaxRec&gt;</span>                               <span class="c">&lt;!-- Requerido: 1 a 4000 --&gt;</span>
+      <span class="t">&lt;/SrchMsgRqHdr&gt;</span>
+      <span class="t">&lt;AccountId&gt;</span>
+        <span class="t">&lt;AcctId&gt;</span><span class="h">${accountNumber}</span><span class="t">&lt;/AcctId&gt;</span>              <span class="c">&lt;!-- Cuenta a consultar --&gt;</span>
+        <span class="t">&lt;AcctType&gt;</span><span class="h">${accountType}</span><span class="t">&lt;/AcctType&gt;</span>            <span class="c">&lt;!-- D o S --&gt;</span>
+      <span class="t">&lt;/AccountId&gt;</span>
+      <span class="t">&lt;StartDt&gt;</span><span class="var">${startDate}</span><span class="t">&lt;/StartDt&gt;</span>                   <span class="c">&lt;!-- YYYY-MM-DD --&gt;</span>
+      <span class="t">&lt;EndDt&gt;</span><span class="var">${endDate}</span><span class="t">&lt;/EndDt&gt;</span>                           <span class="c">&lt;!-- YYYY-MM-DD --&gt;</span>
+      <span class="t">&lt;MemoPostInc&gt;</span><span class="v">Excl</span><span class="t">&lt;/MemoPostInc&gt;</span>                   <span class="c">&lt;!-- Excl=hard posted, Only=memo posted --&gt;</span>
+    <span class="t">&lt;/AcctHistSrch&gt;</span>
+  <span class="t">&lt;/SOAP-ENV:Body&gt;</span>
+<span class="t">&lt;/SOAP-ENV:Envelope&gt;</span></pre>
+    </div>
+
+    <!-- RESPONSE -->
+    <div class="xml-block">
+      <div class="xml-label">
+        <span class="xml-label-tag res">Response</span>
+        <span>AcctHistSrch — Ejemplo consultando la cuenta DESTINO (receptor)</span>
+      </div>
+      <pre class="xml-pre"><span class="t">&lt;AcctHistSrchResponse</span> <span class="a">xmlns</span>=<span class="v">"http://jackhenry.com/jxchange/TPG/2008"</span><span class="t">&gt;</span>
+  <span class="t">&lt;SrchMsgRsHdr&gt;</span>
+    <span class="c">&lt;!-- ... header ... --&gt;</span>
+    <span class="t">&lt;TotRec&gt;</span><span class="v">3</span><span class="t">&lt;/TotRec&gt;</span>
+    <span class="t">&lt;SentRec&gt;</span><span class="v">3</span><span class="t">&lt;/SentRec&gt;</span>
+  <span class="t">&lt;/SrchMsgRsHdr&gt;</span>
+
+  <span class="t">&lt;AcctHistSrchRecArray&gt;</span>
+    <span class="t">&lt;AcctHistSrchRec&gt;</span>
+      <span class="t">&lt;DepHistSrchRec&gt;</span>
+        <span class="t">&lt;TrnAmt&gt;</span><span class="v">50.00</span><span class="t">&lt;/TrnAmt&gt;</span>
+        <span class="t">&lt;TrnDt&gt;</span><span class="v">2026-05-27</span><span class="t">&lt;/TrnDt&gt;</span>
+        <span class="t">&lt;TrnCodeCode&gt;</span><span class="v">227</span><span class="t">&lt;/TrnCodeCode&gt;</span>
+        <span class="t">&lt;TrnDesc&gt;</span><span class="v">TRANSFER</span><span class="t">&lt;/TrnDesc&gt;</span>
+
+        <span class="c">&lt;!-- EftDescArray = lo que mandamos en EftDescArray (lado crédito) --&gt;</span>
+        <span class="t">&lt;EftDescArray&gt;</span>
+          <span class="t">&lt;EftDescInfo&gt;</span>
+            <span class="t">&lt;EftDesc&gt;</span><span class="h">FROM:Camilo L</span><span class="t">&lt;/EftDesc&gt;</span>            <span class="c">&lt;!-- ★ "Recibiste de Camilo" --&gt;</span>
+          <span class="t">&lt;/EftDescInfo&gt;</span>
+          <span class="t">&lt;EftDescInfo&gt;</span>
+            <span class="t">&lt;EftDesc&gt;</span>|9876543210|BTW<span class="t">&lt;/EftDesc&gt;</span>
+          <span class="t">&lt;/EftDescInfo&gt;</span>
+          <span class="t">&lt;EftDescInfo&gt;</span>
+            <span class="t">&lt;EftDesc&gt;</span>000012345|1234567890<span class="t">&lt;/EftDesc&gt;</span>
+          <span class="t">&lt;/EftDescInfo&gt;</span>
+        <span class="t">&lt;/EftDescArray&gt;</span>
+
+      <span class="t">&lt;/DepHistSrchRec&gt;</span>
+    <span class="t">&lt;/AcctHistSrchRec&gt;</span>
+    <span class="c">&lt;!-- ... más registros ... --&gt;</span>
+  <span class="t">&lt;/AcctHistSrchRecArray&gt;</span>
+<span class="t">&lt;/AcctHistSrchResponse&gt;</span></pre>
+    </div>
+
+    <div class="explanation">
+      <h3>Lógica de Parseo en la App</h3>
+      <p>Al recibir el response del historial, la app debe iterar sobre cada <code>EftDescInfo</code> y aplicar esta lógica:</p>
+    </div>
+
+    <table class="field-table">
+      <tr><th>Quien consulta</th><th>Ve el array</th><th>Condición</th><th>Resultado en la app</th></tr>
+      <tr><td>Cuenta ORIGEN</td><td>DrEftDesc</td><td>startsWith("TO:")</td><td class="hl">"Transferiste a Maria Garcia"</td></tr>
+      <tr><td>Cuenta DESTINO</td><td>EftDesc</td><td>startsWith("FROM:")</td><td class="hl">"Recibiste de Camilo L"</td></tr>
+      <tr><td>Cualquiera</td><td>Eft/DrEft</td><td>startsWith("|")</td><td>toAcct, transferCode</td></tr>
+      <tr><td>Cualquiera</td><td>Eft/DrEft</td><td>Otro</td><td>custId, fromAccountNumber</td></tr>
+    </table>
+
+    <div class="note-box info">
+      <strong>Memo-posted vs Hard-posted:</strong> Si necesitan ver la transacción el mismo día (antes del EOD), envíen <code>&lt;MemoPostInc&gt;Only&lt;/MemoPostInc&gt;</code>. Para historial definitivo post-EOD, usen <code>Excl</code> (default). Pueden necesitar hacer dos llamadas para cubrir ambos estados.
+    </div>
+
+    <div class="note-box success">
+      <strong>Resumen:</strong> La cuenta <strong>origen</strong> ve los <code>DrEftDesc</code> (con "TO: nombre del receptor"). La cuenta <strong>destino</strong> ve los <code>EftDesc</code> (con "FROM: nombre del emisor"). Cada usuario siempre ve el nombre de la otra persona.
+    </div>
+  </div>
+
+</div>
+
+<!-- ████ FOOTER ████ -->
+<div class="doc-footer">
+  <strong>Equipo Solución de Caja — Veritran</strong><br>
+  Documentación generada para integración jXchange SOAP / SilverLake<br>
+  Última actualización: Mayo 2026
+</div>
+
+</body>
+</html>
